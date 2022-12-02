@@ -1,0 +1,94 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit=no/>
+
+<style type="text/css">
+    body {
+        background-color: rgb(10, 1, 61);
+        color: rgb(255, 240, 240);
+        padding: 5px;
+        font-family: Jeopardy;
+    }
+
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardy.ttf') format('truetype');
+        font-weight: 100;
+    }
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardybold.ttf') format('truetype');
+        font-weight: 200;
+    }
+
+    #content {
+        height: 100%;
+        display: grid;
+        grid-auto-flow: row;
+        gap: 15px;
+        place-items: center;
+        padding: 15px;
+    }
+
+    #join-box, #host-box {
+        border: solid black;
+        padding: 10px;
+        border-radius: 15px;
+
+        width:calc(100% - 30px);
+        height: 90%;
+
+        display: grid;
+        gap: 10px;
+        place-items: center;
+
+        background-color: rgb(23, 25, 119);
+    }
+
+    h1 {
+        font-size: min(10vh, 10vw);
+    }
+
+    #name-input {
+        font-size: 30;
+        background-color: rgb(255, 240, 240);
+        width: 90%;
+        text-align: center;
+        font-family: Jeopardy;
+        font-weight: 100;
+        margin-bottom: 10px;
+    }
+
+    #join-form {
+        display:grid;
+        place-items: center;
+        grid-auto-flow: row;
+        width: 100%;
+    }
+
+    #join-button, #host-button {
+        font-size: 36;
+        border-radius: 5px;
+        background-color: rgb(50,42,189);
+        border: solid black;
+        font-family: Jeopardy;
+        font-weight: 200;
+    }
+
+</style>
+
+<body>
+    <div id="content">
+        <div id="join-box">
+            <h1>Join a game</h1>
+            <form id="join-form" method="post" action="join">
+                <input id="name-input" type="text" name="name" placeholder="Enter your name" required/>
+                <input id="join-button" type="submit" value="Join"/>
+            </form>
+        </div>
+        <div id="host-box">
+            <h1>Host a game</h1>
+            <form method="post" action="host">
+                <input id="host-button" type="submit" value="Host"/>
+            </form>
+        </div>
+    </div>
+</body>

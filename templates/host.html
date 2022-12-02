@@ -1,0 +1,332 @@
+<style type="text/css">
+    body {
+        background-color: rgb(10, 1, 61);
+        color: rgb(255, 240, 240);
+        padding: 5px;
+        font-family: Jeopardy;
+    }
+
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardy.ttf') format('truetype');
+        font-weight: 100;
+    }
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardybold.ttf') format('truetype');
+        font-weight: 200;
+    }
+    #content {
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        grid-template-rows: 30% 35% 35%;
+    }
+    button {
+        color: #ffeeee;
+        background-color: rgb(50,42,189);
+        border: rgb(32,42,189);
+        border-radius: 10px;
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: 32;
+    }
+    #clear-button {
+        grid-column: 1 / 3;
+        grid-row: 1;
+        width: 100%;
+        height: 100%;
+        min-height: 100px;
+        font-size: min(50vh, 10vw);
+        font-weight: 200;
+        border-radius: 30px;
+    }
+    #button-grid, #special-buttons {
+        width:100%;
+        min-height: 100px;
+        display:grid;
+        place-items: center;
+        grid-auto-flow: row;
+        gap: 10px;
+    }
+    #score-buttons {
+        grid-column: 1/3;
+        grid-row: 1;
+        display:grid;
+        place-items: center;
+        grid-auto-flow: column;
+        gap: 10px;
+        grid-template-columns: repeat(5, calc(20%-5px));
+        width: 100%;
+    }
+    #custom-score-picker {
+        width: 100%;
+        height: 100%;
+        min-height: 50px;
+        grid-column: 1;
+        grid-row: 2;
+        display:grid;
+        place-items: center;
+        grid-auto-flow:column;
+        gap: 10px;
+        grid-template-columns: repeat(2, calc(50%-5px));
+    }
+    #custom-score-button, #selected-custom-score-button {
+        width:100%;
+        height:100%;
+    }
+    #double-button {
+        width: 100%;
+        height: 100%;
+        min-height: 50px;
+        grid-column: 2;
+        grid-row: 2;
+    }
+    #score-button, #selected-score-button {
+        width:100%;
+    }
+    #selected-score-button, #selected-custom-score-button {
+        background-color: rgb(101, 95, 207);
+    }
+    #left-col {
+        grid-column: 1;
+        grid-row: 2 / 3;
+        width:100%;
+        height:100%;
+    }
+    #right-col {
+        grid-column: 2;
+        grid-row: 2 / 3;
+        width:100%;
+        height:100%;
+    }
+    #plus-button {
+        background-color: rgb(24, 142, 65);
+        grid-column: 1;
+        grid-row: 1;
+        padding: 0px;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+    }
+    #minus-button {
+        background-color: rgb(136, 23, 23);
+        grid-column: 1;
+        grid-row: 2;
+        padding: 0px;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+    }
+    #minus-button.flex, #plus-button.flex {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    p {
+        grid-column: 2;
+        grid-row: 1/3;
+        margin: 0px;
+        padding-left: 5px;
+    }
+    h1 {
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: min(20vh, 5vw);
+        width: 100%;
+        text-align: center;
+        margin: 0;
+    }
+    ul {
+        list-style: none;
+        padding: 0px;
+    }
+    li {
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: 48;
+        display:grid;
+        place-items: left;
+        grid-auto-flow:column;
+        gap: 5px;
+        grid-template-columns: 30px;
+        padding: 0px;
+        margin-bottom: 15px;
+    }
+    input {
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: 32;
+        width: 100%;
+        height: 100%;
+        background-color: rgb(154, 150, 237);
+        border: 2px solid black;
+    }
+
+</style>
+
+<body>
+    <div id="content">
+        <button id="clear-button">Clear buzzers</button>    
+        <div id="left-col">
+            <h1>Buzzers</h1>
+            <ol id="buzz-list"></ol>
+        </div>
+        <div id="right-col">
+            <h1>Scores</h1>
+            <div id="button-grid">
+                <div id="score-buttons"></div>
+                <div id="custom-score-picker">
+                    <button id="custom-score-button">Custom:</button>
+                    <input type="text" id="custom-score-field">
+                </div>
+                <button id="double-button">Toggle Double Jeopardy</button>
+            </div>
+            <ul id="scores-list"></ul>
+        </div>
+    </div>
+</body>
+
+
+<script language = "javascript" type = "text/javascript">
+    var scoreChangeValue = 0;
+    var cumulativeScoreChange = 0;
+    var scoreChangePlayer = null;
+    var ajaxRequest;
+
+    function processRequest() {
+        if (ajaxRequest.readyState === 4) {
+            responseXML = ajaxRequest.responseXML;
+            
+            // assemble buzz list 
+            var buzzList = responseXML.getElementsByTagName("BuzzListItem");
+            let bl = document.getElementById("buzz-list");
+            bl.textContent = '';
+            for (let i = 0; i < buzzList.length; i++) {
+                let li = document.createElement("li");
+                li.innerText = buzzList[i].innerHTML;
+                bl.appendChild(li);
+            }
+
+            // assemble player list with scores
+            var playerList = responseXML.getElementsByTagName("Player");
+            var scoresList = responseXML.getElementsByTagName("Score");
+
+            // prepare to update player scores display
+            let ps = document.getElementById("scores-list");
+            ps.textContent = '';
+
+            for (let i = 0; i < playerList.length; i++) {
+                // create list item from server response
+                let li = document.createElement("li");
+
+                // create score change button
+                let plusButton = document.createElement("button");
+                plusButton.innerText = "+";
+                plusButton.id = "plus-button"
+                plusButton.className = "flex";
+
+                // score change ajax event
+                plusButton.addEventListener('click', (event) => {
+                    if (selectedScoreButton !== null && selectedScoreButton.id === "selected-custom-score-button") {
+                        scoreChangeValue = document.getElementById("custom-score-field").value;
+                    }
+                    cumulativeScoreChange += scoreChangeValue;
+                    scoreChangePlayer = playerList[i].innerHTML;
+                });
+                li.appendChild(plusButton);
+
+                let minusButton = document.createElement("button");
+                minusButton.innerText = "−";
+                minusButton.id = "minus-button";
+                minusButton.className = "flex";
+                // score change ajax event
+                minusButton.addEventListener('click', (event) => {
+                    if (selectedScoreButton !== null && selectedScoreButton.id === "selected-custom-score-button") {
+                        scoreChangeValue = document.getElementById("custom-score-field").value;
+                    }
+                    cumulativeScoreChange -= scoreChangeValue;
+                    scoreChangePlayer = playerList[i].innerHTML;
+                });
+                li.appendChild(minusButton);
+
+                let label = document.createElement("p");
+                label.innerText = playerList[i].innerHTML + ": " + scoresList[i].innerHTML + "  ";
+                li.appendChild(label);
+
+                ps.appendChild(li);
+            }
+            
+            setTimeout(function () { getBuzzList(); }, 500);
+        }
+    }
+
+    function getBuzzList() {
+        try {
+            ajaxRequest = new XMLHttpRequest();
+        } catch (e) { alert("ajax error") }
+        
+        ajaxRequest.onreadystatechange = processRequest;
+        
+        ajaxRequest.open("POST", "state", true);
+        let data = new FormData();
+        if (scoreChangePlayer !== null) {
+            data.append('player', scoreChangePlayer);
+            data.append('scoreChange', cumulativeScoreChange.toString());
+            cumulativeScoreChange = 0;
+            scoreChangePlayer = null;
+        }
+        ajaxRequest.send(data);
+    }
+
+    var doubleJeopardy = false;
+    var selectedScoreButton = null;
+
+    function updateScoreButtons() {
+        btnList = document.getElementById("score-buttons");
+        btnList.innerHTML = '';
+        for (let i = (doubleJeopardy ? 400 : 200); i <= (doubleJeopardy ? 2000 : 1000); i += (doubleJeopardy ? 400 : 200)) {
+            btn = document.createElement("button");
+            btn.innerText = i.toString();
+            btn.id = "score-button";
+            let thisbtn = btn;
+            btn.addEventListener('click', function() {
+                if (selectedScoreButton !== null) {
+                    selectedScoreButton.id = selectedScoreButton.id.substring(9);
+                }
+                scoreChangeValue = i;
+                thisbtn.id = "selected-score-button"
+                selectedScoreButton = thisbtn;
+            });
+            btnList.appendChild(btn);
+        }
+    }
+
+    getBuzzList();
+    updateScoreButtons();
+
+    document.getElementById("double-button").addEventListener('click', function() {
+        doubleJeopardy = !doubleJeopardy;
+        if (selectedScoreButton.id != "selected-custom-score-button") {
+            scoreChangeValue = 0;
+        }
+        updateScoreButtons();
+    });
+
+    document.getElementById("custom-score-button").addEventListener('click', function() {
+        if (selectedScoreButton !== null) {
+            selectedScoreButton.id = selectedScoreButton.id.substring(9);
+        }
+        thisbtn = document.getElementById("custom-score-button");
+        thisbtn.id = "selected-custom-score-button";
+        selectedScoreButton = thisbtn;
+    });
+
+    document.getElementById("clear-button").addEventListener('click', function() {
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", "host", true);
+        let data = new FormData();
+        xhr.send(data);
+    });
+</script>

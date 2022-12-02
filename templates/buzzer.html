@@ -1,0 +1,131 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit=no/>
+
+<style type="text/css">
+    body {
+        background-color: rgb(10, 1, 61);
+        padding: 0;
+        margin: 0;
+        font-family: Jeopardy;
+    }
+
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardy.ttf') format('truetype');
+        font-weight: 100;
+    }
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardybold.ttf') format('truetype');
+        font-weight: 200;
+    }
+
+    #header {
+        height:max(20%, 80px);
+        top: 0px;
+        margin: 0;
+        background-color: rgb(23, 25, 119);
+        display: grid;
+        place-items: center;
+        color: #ffeeee;
+        font-size: 60;
+        font-weight: 200;
+    }
+
+    #content {
+        height: 80%;
+        display: grid;
+        place-items: center;
+    }
+
+    #buzzer-button {
+        width: calc(100vw - 30px);
+        height: calc(100% - 30px);
+        color: #ffeeee;
+        background-color: rgb(50,42,189);
+        border: rgb(32,42,189);
+        border-radius: 30px;
+        font-size: min(50vh, 20vw);
+        font-family: "Jeopardy";
+        font-weight: 200;
+    }
+</style>
+
+<script language="javascript" type="text/javascript">
+    var ajaxRequest;
+    function ajaxFunction() {
+        try {
+            ajaxRequest = new XMLHttpRequest();
+        } catch (e) { alert("error :(")}
+    }
+    function processRequest() {
+        if (ajaxRequest.readyState === 4) {
+            responseXML = ajaxRequest.responseXML;
+            
+            var playerList = responseXML.getElementsByTagName("Player");
+            var scoresList = responseXML.getElementsByTagName("Score");
+            let myScore = 0;
+            for (let i = 0; i < playerList.length; i++) {
+                // find player's score
+                if (playerList[i].innerHTML === getCookie("name")) {
+                    myScore = scoresList[i].innerHTML;
+                    break;
+                }
+            }
+
+            document.getElementById("header").innerHTML = getCookie("name") + ': ' + myScore;
+            
+            setTimeout(function () { getMyScore(); }, 500);
+        }
+    }
+    function getMyScore() {
+        ajaxFunction();
+        
+        ajaxRequest.onreadystatechange = processRequest;
+        
+        ajaxRequest.open("GET", "state", true);
+        ajaxRequest.send(null);
+    }
+</script>
+
+<body>
+    <div id="header"></div>
+    <div id="content">
+        <button id="buzzer-button">BUZZ</button>
+    </div>
+</body>
+
+<script language = "javascript" type = "text/javascript">
+    function setCookie(name,value,days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days*24*60*60*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
+        }
+        return null;
+    }
+    function eraseCookie(name) {   
+        document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+    if (getCookie('name') === null) {
+        window.location.href = '../';
+    }
+    document.getElementById("buzzer-button").addEventListener('click', async _ => {
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "buzzer", true);
+        let data = new FormData();
+        data.append('player', 'buzz');
+        xhr.send(data);
+    });
+    getMyScore();
+</script>

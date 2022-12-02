@@ -1,0 +1,15 @@
+$def with (buzz_list, scores)
+<?xml version="1.0"?>
+<GameState>
+    <BuzzList>
+        $for player in buzz_list:
+            <BuzzListItem>$player</BuzzListItem>
+    </BuzzList>
+    <Scores>
+        $for player in scores.keys():
+            <ScoreEntry>
+                <Player>$player</Player>
+                <Score>$scores[player]</Score>
+            </ScoreEntry>
+    </Scores>
+</GameState>
