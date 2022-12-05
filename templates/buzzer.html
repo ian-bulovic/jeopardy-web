@@ -50,7 +50,14 @@
     }
 </style>
 
-<script language="javascript" type="text/javascript">
+<body>
+    <div id="header"></div>
+    <div id="content">
+        <button id="buzzer-button">BUZZ</button>
+    </div>
+</body>
+
+<script language = "javascript" type = "text/javascript">
     var ajaxRequest;
     function ajaxFunction() {
         try {
@@ -85,16 +92,6 @@
         ajaxRequest.open("GET", "state", true);
         ajaxRequest.send(null);
     }
-</script>
-
-<body>
-    <div id="header"></div>
-    <div id="content">
-        <button id="buzzer-button">BUZZ</button>
-    </div>
-</body>
-
-<script language = "javascript" type = "text/javascript">
     function setCookie(name,value,days) {
         var expires = "";
         if (days) {
