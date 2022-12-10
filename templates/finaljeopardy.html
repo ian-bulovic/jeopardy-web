@@ -37,38 +37,6 @@
         place-items: center;
     }
 
-    #bet-value {
-        color: #ffeeee;
-        font-size: 60;
-        font-weight: 200;
-    }
-
-    #bet-slider {
-        -webkit-appearance:none !important;
-        background: black;
-        border: none;
-        outline: none;
-        width: calc(90%);
-        height: 5px;
-        background-color: rgb(50,42,189);
-        font-family: "Jeopardy";
-        font-weight: 200;
-    }
-
-    #bet-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    #bet-slider::-moz-range-thumb, #bet-slider::-webkit-slider-thumb {
-      width: 35px;
-      height: 35px;
-      border-radius: 25%;
-      border-color: rgb(10, 1, 61);
-      border-width: 3px;
-      background-color: rgb(101, 95, 207);
-      cursor: pointer;
-    }
-
     button {
         color: #ffeeee;
         background-color: rgb(50,42,189);
@@ -79,7 +47,7 @@
         font-size: 32;
     }
 
-    #answer-input {
+    input {
         font-family: "Jeopardy";
         font-weight: 100;
         font-size: 32;
@@ -89,20 +57,25 @@
         border: 2px solid black;
     }
 
+    ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+        color: rgb(50,42,189);
+        opacity: 1; /* Firefox */
+    }
+
 </style>
 
 <body>
-    <div id="header">test</div>
+    <div id="header"></div>
     <div id="content">
-        <h1 id="bet-value">0</h1>
-        <input type="range" id="bet-slider" min="0" max="1000" value="0" oninput="document.getElementById('bet-value').innerText = this.value;">
+        <input type="number" inputmode="numeric" min="0" max="1000" placeholder="0–1000" id="bet-value" onchange = "checkValidity()" onkeypress = "this.onchange();" onpaste = "this.onchange();" oninput = "this.onchange();">
         <button id="submit-bet-button">Submit</button>
-        <input type="text" id="answer-input">
-        <button id="submit-bet-button">Submit</button>
+        <input type="text" id="answer-input" disabled>
+        <button id="submit-answer-button" disabled>Submit</button>
     </div>
 </body>
-<!-- 
+
 <script language = "javascript" type = "text/javascript">
+    var loaded = false;
     var ajaxRequest;
     function ajaxFunction() {
         try {
@@ -115,16 +88,37 @@
             
             var playerList = responseXML.getElementsByTagName("Player");
             var scoresList = responseXML.getElementsByTagName("Score");
+            var betsList = responseXML.getElementsByTagName("Bet");
+            var guessList = responseXML.getElementsByTagName("Guess");
+
             let myScore = 0;
             for (let i = 0; i < playerList.length; i++) {
                 // find player's score
                 if (playerList[i].innerHTML === getCookie("name")) {
                     myScore = scoresList[i].innerHTML;
+                    if (betsList[i].innerHTML !== "") {
+                        betValueInput.disabled = true;
+                        submitBetButton.disabled = true;
+                        betValueInput.value = betsList[i].innerHTML;
+                        answerInput.disabled = false;
+                        submitAnswerButton.disabled = false;
+                    }
+                    if (guessList[i].innerHTML !== "") {
+                        answerInput.disabled = true;
+                        submitAnswerButton.disabled = true;
+                        answerInput.value = guessList[i].innerHTML;
+                    }
                     break;
                 }
             }
 
             document.getElementById("header").innerHTML = getCookie("name") + ': ' + myScore;
+            if (!loaded) {
+                loaded = true;
+                let betLimit = Math.max(+myScore, 1000);
+                document.getElementById("bet-value").max = betLimit;
+                document.getElementById("bet-value").placeholder = "0–" + betLimit;
+            }
             
             setTimeout(function () { getMyScore(); }, 500);
         }
@@ -163,4 +157,42 @@
         window.location.href = '../';
     }
     getMyScore();
-</script> -->
+
+    betValueInput = document.getElementById("bet-value");
+    answerInput = document.getElementById("answer-input");
+    submitBetButton = document.getElementById("submit-bet-button");
+    submitAnswerButton = document.getElementById("submit-answer-button");
+
+    betValueInput.addEventListener('invalid', (event) => {
+        betValueInput.value = Math.max(betValueInput.min, Math.min(betValueInput.max, betValueInput.value));
+        alert("no");
+    });
+
+    submitBetButton.addEventListener('click', () => {
+        if (betValueInput.value !== "") {
+            betValueInput.disabled = true;
+            submitBetButton.disabled = true;
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "finaljeopardy", true);
+            let data = new FormData();
+            data.append('bet', betValueInput.value);
+            data.append('answer', '');
+            xhr.send(data);
+            answerInput.disabled = false;
+            submitAnswerButton.disabled = false;
+        }
+    });
+
+    submitAnswerButton.addEventListener('click', () => {
+        if (answerInput.value !== "") {
+            answerInput.disabled = true;
+            submitAnswerButton.disabled = true;
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "finaljeopardy", true);
+            let data = new FormData();
+            data.append('bet', betValueInput.value);
+            data.append('answer', answerInput.value);
+            xhr.send(data);
+        }
+    });
+</script>

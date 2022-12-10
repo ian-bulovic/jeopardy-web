@@ -1,4 +1,4 @@
-$def with (buzz_list, scores)
+$def with (buzz_list, scores, bets, guesses, status)
 <?xml version="1.0"?>
 <GameState>
     <BuzzList>
@@ -10,6 +10,9 @@ $def with (buzz_list, scores)
             <ScoreEntry>
                 <Player>$player</Player>
                 <Score>$scores[player]</Score>
+                <Bet>$bets[player]</Bet>
+                <Guess>$guesses[player]</Guess>
             </ScoreEntry>
     </Scores>
+    <Status>$status</Status>
 </GameState>

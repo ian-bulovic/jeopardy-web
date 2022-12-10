@@ -1,0 +1,216 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit=no/>
+
+<style type="text/css">
+    body {
+        background-color: rgb(10, 1, 61);
+        padding: 0;
+        margin: 0;
+        font-family: "Jeopardy";
+        color: rgb(255, 240, 240);
+        padding: 5px;
+        font-family: "Jeopardy";
+    }
+
+    button {
+        color: #ffeeee;
+        background-color: rgb(50,42,189);
+        border: rgb(32,42,189);
+        border-radius: 10px;
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: 32;
+    }
+
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardy.ttf') format('truetype');
+        font-weight: 100;
+    }
+    @font-face {
+        font-family: "Jeopardy";
+        src: url('static/jeopardybold.ttf') format('truetype');
+        font-weight: 200;
+    }
+
+    #header {
+        height:max(20%, 80px);
+        top: 0px;
+        margin: 0;
+        background-color: rgb(23, 25, 119);
+        display: grid;
+        place-items: center;
+        color: #ffeeee;
+        font-size: 60;
+        font-weight: 200;
+    }
+
+    #content {
+        height: 90%;
+        padding-top: 30px;
+    }
+
+    table {
+        width: 100%;
+        font-family: "Jeopardy";
+        font-weight: 100;
+        font-size: 48;
+    }
+
+    tr:nth-child(even) {
+        background-color: rgb(14, 1, 90);
+    }
+
+    td {
+        text-align: center;
+        padding: 20px;
+    }
+
+    th {
+        padding: 30px;
+    }
+
+    #button-td {
+        display: grid;
+        place-items: center;
+    }
+
+    #plus-button {
+        background-color: rgb(24, 142, 65);
+        grid-column: 1;
+        grid-row: 1;
+        padding: 0px;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+    }
+    #minus-button {
+        background-color: rgb(136, 23, 23);
+        grid-column: 1;
+        grid-row: 2;
+        padding: 0px;
+        width: 30px;
+        height: 30px;
+        display: inline-block;
+    }
+    #minus-button.flex, #plus-button.flex {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+</style>
+
+<body>
+    <div id="header">Final Jeopardy</div>
+    <div id="content">
+        <table id="player-table"></table>
+    </div>
+</body>
+
+<script language = "javascript" type = "text/javascript">
+    var status = "betting";
+    var xhr;
+
+    var table = document.getElementById("player-table");
+
+    function processRequest() {
+        if (xhr.readyState === 4) {
+            responseXML = xhr.responseXML;
+            
+            var playerList = responseXML.getElementsByTagName("Player");
+            var scoresList = responseXML.getElementsByTagName("Score");
+            var betsList   = responseXML.getElementsByTagName("Bet");
+            var guessList  = responseXML.getElementsByTagName("Guess");
+
+            table.innerHTML = "";
+            let headerRow   = document.createElement("tr");
+            let nameHead    = document.createElement("th");
+            let scoreHead   = document.createElement("th");
+            let betHead     = document.createElement("th");
+            let guessHead   = document.createElement("th");
+            let buttonsHead = document.createElement("th");
+            nameHead.innerHTML = "Name";
+            scoreHead.innerHTML = "Score";
+            betHead.innerHTML = "Bet";
+            guessHead.innerHTML = "Guess";
+            buttonsHead.innerHTML = "";
+                 
+            headerRow.appendChild(nameHead);
+            headerRow.appendChild(scoreHead);
+            headerRow.appendChild(betHead);
+            headerRow.appendChild(guessHead);
+            headerRow.appendChild(buttonsHead);
+            table.appendChild(headerRow);
+
+            for (let i = 0; i < playerList.length; i++) {
+                let row     = document.createElement("tr");
+                let name    = document.createElement("td");
+                let score   = document.createElement("td");
+                let bet     = document.createElement("td");
+                let guess   = document.createElement("td");
+                let buttons = document.createElement("td");
+
+                name.innerHTML    = playerList[i].innerHTML;
+                score.innerHTML   = scoresList[i].innerHTML;
+                bet.innerHTML     = betsList[i].innerHTML;
+                guess.innerHTML   = guessList[i].innerHTML;
+
+                buttons.id = "button-td";
+                
+                let plusButton = document.createElement("button");
+                plusButton.innerText = "+";
+                plusButton.id = "plus-button"
+                plusButton.className = "flex";
+                buttons.appendChild(plusButton);
+                
+                let minusButton = document.createElement("button");
+                minusButton.innerText = "−";
+                minusButton.id = "minus-button";
+                minusButton.className = "flex";
+                buttons.appendChild(minusButton);       
+                
+                row.appendChild(name);
+                row.appendChild(score);
+                row.appendChild(bet);
+                row.appendChild(guess);
+                row.appendChild(buttons);
+                table.appendChild(row);
+
+                plusButton.addEventListener('click', (event) => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open("POST", "state", true);
+                    let data = new FormData();
+                    data.append('player', playerList[i].innerHTML);
+                    data.append('scoreChange', betsList[i].innerHTML);
+                    xhr.send(data);
+                });
+
+                minusButton.addEventListener('click', (event) => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open("POST", "state", true);
+                    let data = new FormData();
+                    data.append('player', playerList[i].innerHTML);
+                    data.append('scoreChange', "-" + betsList[i].innerHTML);
+                    xhr.send(data);
+                });
+            }
+
+            setTimeout(function () { updateGameState(); }, 500);
+        }
+    }
+    function updateGameState() {
+        try {
+            xhr = new XMLHttpRequest();
+        } catch (e) { alert("error :(")}
+        
+        xhr.onreadystatechange = processRequest;
+        
+        xhr.open("POST", "finalhost", true);
+
+        let data = new FormData();
+        data.append("status", status);
+        xhr.send(data);
+    }
+
+    updateGameState();
+</script>

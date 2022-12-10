@@ -37,19 +37,30 @@ urls = (
     '/buzz'  , 'buzz'  ,
     '/host'  , 'host'  ,
     '/state' , 'state' ,
+    '/finaljeopardy' , 'finaljeopardy' ,
+    '/finalhost'     , 'finalhost'     ,
 )
 
 scores = {}
+bets = {}
+guesses = {}
 buzz_list = []
 last_buzz_time = {}
 lockout_time = datetime.timedelta(seconds=0.25)
 
+game_status = {"status": "normal"}
+
+def join_if_absent(name):
+    if (name not in scores.keys()):
+        print(name + " joined the game.")
+        scores[name] = 0
+        bets[name] = ""
+        guesses[name] = ""
+
 def try_buzz(name, timestamp):
     dt = lockout_time
 
-    if (name not in scores.keys()):
-        print(name + " joined the game.")
-        scores[name] = 0;
+    join_if_absent(name)
     
     if name in last_buzz_time.keys():
         dt = timestamp - last_buzz_time[name]
@@ -68,9 +79,7 @@ class join:
     def POST(self):
         name = web.input().name;
         web.setcookie("name", name)
-        if (name not in scores.keys()):
-            print(web.input().name + " joined the game.")
-            scores[name] = 0;
+        join_if_absent(name)
         raise web.seeother("/buzzer")
 
 class buzzer:
@@ -103,8 +112,8 @@ class host:
 
 class state:
     def GET(self):
-        return render.state(buzz_list, scores)
-    def POST(self):
+        return render.state(buzz_list, scores, bets, guesses, game_status["status"])
+    def POST(self):            
         try:
             player = web.input().player
             score_change = int(web.input().scoreChange)
@@ -115,7 +124,24 @@ class state:
                 host_name = "host"
             print(f"{player} {verb} {abs(score_change)} points. ({host_name})")
         finally:
-            return render.state(buzz_list, scores)
+            return render.state(buzz_list, scores, bets, guesses, game_status["status"])
+
+class finaljeopardy:
+    def GET(self):
+        return render.finaljeopardy()
+    def POST(self):
+        playername = web.cookies().get("name")
+        bet_value = int(web.input().bet)
+        answer = web.input().answer
+        bets[playername] = bet_value
+        guesses[playername] = answer
+
+class finalhost:
+    def GET(self):
+        return render.finalhost()
+    def POST(self):
+        game_status["status"] = web.input().status
+        return render.state(buzz_list, scores, bets, guesses, game_status["status"])
 
 # found on stackoverflow
 def get_ip():

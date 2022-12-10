@@ -67,9 +67,15 @@
     function processRequest() {
         if (ajaxRequest.readyState === 4) {
             responseXML = ajaxRequest.responseXML;
+
+            if (responseXML.getElementsByTagName("Status")[0].innerHTML === "betting") {
+                window.location.replace("/finaljeopardy");
+                return;
+            }
             
             var playerList = responseXML.getElementsByTagName("Player");
             var scoresList = responseXML.getElementsByTagName("Score");
+
             let myScore = 0;
             for (let i = 0; i < playerList.length; i++) {
                 // find player's score

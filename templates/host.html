@@ -164,6 +164,13 @@
         border: 2px solid black;
     }
 
+    #final-jeopardy-button {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        padding: 5px;
+    }
+
 </style>
 
 <body>
@@ -185,6 +192,7 @@
             </div>
             <ul id="scores-list"></ul>
         </div>
+        <button id="final-jeopardy-button">Enter Final Jeopardy</button>
     </div>
 </body>
 
@@ -193,6 +201,9 @@
     var scoreChangeValue = 0;
     var cumulativeScoreChange = 0;
     var scoreChangePlayer = null;
+
+    var enterFinalJeopardy = false;
+
     var ajaxRequest;
 
     function processRequest() {
@@ -226,8 +237,20 @@
                 plusButton.innerText = "+";
                 plusButton.id = "plus-button"
                 plusButton.className = "flex";
-
-                // score change ajax event
+                li.appendChild(plusButton);
+                
+                let minusButton = document.createElement("button");
+                minusButton.innerText = "−";
+                minusButton.id = "minus-button";
+                minusButton.className = "flex";
+                li.appendChild(minusButton);
+                
+                let label = document.createElement("p");
+                label.innerText = playerList[i].innerHTML + ": " + scoresList[i].innerHTML + "  ";
+                li.appendChild(label);
+                
+                ps.appendChild(li);
+                
                 plusButton.addEventListener('click', (event) => {
                     if (selectedScoreButton !== null && selectedScoreButton.id === "selected-custom-score-button") {
                         scoreChangeValue = document.getElementById("custom-score-field").value;
@@ -235,13 +258,7 @@
                     cumulativeScoreChange += scoreChangeValue;
                     scoreChangePlayer = playerList[i].innerHTML;
                 });
-                li.appendChild(plusButton);
-
-                let minusButton = document.createElement("button");
-                minusButton.innerText = "−";
-                minusButton.id = "minus-button";
-                minusButton.className = "flex";
-                // score change ajax event
+                
                 minusButton.addEventListener('click', (event) => {
                     if (selectedScoreButton !== null && selectedScoreButton.id === "selected-custom-score-button") {
                         scoreChangeValue = document.getElementById("custom-score-field").value;
@@ -249,13 +266,6 @@
                     cumulativeScoreChange -= scoreChangeValue;
                     scoreChangePlayer = playerList[i].innerHTML;
                 });
-                li.appendChild(minusButton);
-
-                let label = document.createElement("p");
-                label.innerText = playerList[i].innerHTML + ": " + scoresList[i].innerHTML + "  ";
-                li.appendChild(label);
-
-                ps.appendChild(li);
             }
             
             setTimeout(function () { getBuzzList(); }, 500);
@@ -308,7 +318,7 @@
 
     document.getElementById("double-button").addEventListener('click', function() {
         doubleJeopardy = !doubleJeopardy;
-        if (selectedScoreButton.id != "selected-custom-score-button") {
+        if (selectedScoreButton !== null && selectedScoreButton.id !== "selected-custom-score-button") {
             scoreChangeValue = 0;
         }
         updateScoreButtons();
@@ -328,5 +338,9 @@
         xhr.open("POST", "host", true);
         let data = new FormData();
         xhr.send(data);
+    });
+
+    document.getElementById("final-jeopardy-button").addEventListener('click', function() {
+        window.location.replace("/finalhost");
     });
 </script>
